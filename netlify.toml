@@ -1,0 +1,10 @@
+[functions]
+  directory = "functions"
+
+[dev]
+  functionsPort = 9999
+
+[build]
+  command = "npm run build"
+  functions = "functions/"
+  publish = "build"
