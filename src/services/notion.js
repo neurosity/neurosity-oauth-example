@@ -41,12 +41,18 @@ function useProvideNotion() {
     const subscription = notion.onAuthStateChanged().subscribe(async (user) => {
       console.log("user", user);
 
+      setState((prevState) => ({
+        ...prevState,
+        loading: false,
+        user
+      }));
+
       if (user) {
-        setState((prevState) => ({
-          ...prevState,
-          loading: false,
-          user
-        }));
+        // setState((prevState) => ({
+        //   ...prevState,
+        //   loading: false,
+        //   user
+        // }));
       } else {
         // Comment this out to to get existing custom tokens by user id
         // axios
