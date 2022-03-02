@@ -5,14 +5,20 @@ import { Notion } from "@neurosity/notion";
 import axios from "axios";
 
 export const notion = new Notion({
-  autoSelectDevice: false,
-  emulator: true // @TODO: remove before going to prod
+  autoSelectDevice: false
+  emulator: false
 });
 
 export const NotionContext = createContext();
 
 export const useNotion = () => {
   return useContext(NotionContext);
+};
+
+const acmeNeuroConfig = {
+  enableDBQuery: true,
+  // Neurosity userId must be saved and retrieved by third-party
+  testNeurosityUserId: "OEWjFDdq6mMFKyDtSafg1edxnr25"
 };
 
 const initialState = {
@@ -41,45 +47,57 @@ function useProvideNotion() {
     const subscription = notion.onAuthStateChanged().subscribe(async (user) => {
       console.log("user", user);
 
-      setState((prevState) => ({
-        ...prevState,
-        loading: false,
-        user
-      }));
+      if (acmeNeuroConfig.enableDBQuery) {
+        if (user) {
+          setState((prevState) => ({
+            ...prevState,
+            loading: false,
+            user
+          }));
+        } else {
+          const params = getOAuthParams();
 
-      if (user) {
-        // setState((prevState) => ({
-        //   ...prevState,
-        //   loading: false,
-        //   user
-        // }));
+          if (params?.customToken) {
+            return;
+          }
+
+          setState((prevState) => ({
+            ...prevState,
+            loading: false,
+            user
+          }));
+
+          axios
+            .get(`/.netlify/functions/get-neurosity-custom-token`, {
+              params: { userId: acmeNeuroConfig.testNeurosityUserId }
+            })
+            .then(({ data }) =>
+              notion
+                .login({
+                  customToken: data
+                })
+                .catch(() => null)
+            )
+            .then((auth) => {
+              setState((prevState) => ({
+                ...prevState,
+                loading: false,
+                user: auth?.user
+              }));
+            })
+            .catch(() => {
+              setState((prevState) => ({
+                ...prevState,
+                loading: false
+              }));
+            });
+        }
       } else {
-        // Comment this out to to get existing custom tokens by user id
-        // axios
-        //   .get(`/.netlify/functions/get-neurosity-custom-token`, {
-        //     params: { userId: "kE3QLxDB1dYTLlNzO1WwOKvGy7iG" }
-        //   })
-        //   .then(({ data }) =>
-        //     notion
-        //       .login({
-        //         customToken: data.data.token
-        //       })
-        //       .catch(() => null)
-        //   )
-        //   .then(() => {
-        //     setState((prevState) => ({
-        //       ...prevState,
-        //       loading: false,
-        //       user
-        //     }));
-        //   })
-        //   .catch((error) => {
-        //     setState((prevState) => ({
-        //       ...prevState,
-        //       loading: false
-        //       // oAuthError: error?.message
-        //     }));
-        //   });
+        setState((prevState) => ({
+          ...prevState,
+          loading: false,
+          user
+        }));
       }
     });
 
@@ -147,6 +165,12 @@ function useProvideNotion() {
 function useOAuthResult() {
   const location = useLocation();
   const paramsString = location.hash.replace("#", "");
+
+  return getOAuthParams(paramsString);
+}
+
+function getOAuthParams(paramsString) {
+  paramsString = paramsString ?? window.location.hash;
   const searchParams = new URLSearchParams(paramsString);
 
   return {
