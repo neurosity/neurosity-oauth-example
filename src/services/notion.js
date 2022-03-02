@@ -5,7 +5,7 @@ import { Notion } from "@neurosity/notion";
 import axios from "axios";
 
 export const notion = new Notion({
-  autoSelectDevice: false
+  autoSelectDevice: false,
   emulator: false
 });
 
