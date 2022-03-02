@@ -8,3 +8,4 @@
   command = "npm run build"
   functions = "functions/"
   publish = "build"
+  environment = { NODE_OPTIONS = "--max-old-space-size=4096" }
