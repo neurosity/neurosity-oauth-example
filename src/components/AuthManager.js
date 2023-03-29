@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Flex } from "reflexbox";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useLocation, useNavigate } from "react-router-dom";
@@ -28,9 +27,16 @@ export function AuthManager({ children }) {
 
   if (loading) {
     return (
-      <Flex justifyContent="center" alignItems="center" height="100%">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%"
+        }}
+      >
         <CircularProgress />
-      </Flex>
+      </div>
     );
   }
 
